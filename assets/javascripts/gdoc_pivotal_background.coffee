@@ -140,7 +140,7 @@ root.GdocPivotalBackground =
       if xhr.getResponseHeader('location')
         GdocPivotalBackground.resumable_length = 0
         GdocPivotalBackground.resumable_url = xhr.getResponseHeader('location')
-        GdocPivotalBackground.update_gdoc_ui({bit_saved: 0, bit_count: GdocPivotalBackground.gdoc.length})
+        GdocPivotalBackground.update_gdoc_ui({bit_saved: 0, bit_count: GdocPivotalBackground.gdoc.length, bit_percent: 0})
         GdocPivotalBackground.upload_resumable_document()
       else
         GdocPivotalBackground.handle_upload_error()
