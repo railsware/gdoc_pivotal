@@ -41,12 +41,12 @@ root.GdocPivotalBackground =
       GdocPivotalBackground.templates.gdoc_info = Handlebars.compile(GdocPivotalBackground.popup.$('#gdocInformation').html())
   init_bindings: ->
     GdocPivotalBackground.popup.$('#gdocContent').on 'click', 'a.update_doc', (event) ->
-      if GdocPivotalBackground.in_progress is false
+      if GdocPivotalBackground.in_progress is false && GdocPivotalBackground.pivotal_links.length > 0
         GdocPivotalBackground.update_gdoc_ui({gdoc_loading: true})
         GdocPivotalBackground.update_doc_iteration(GdocPivotalBackground.pivotal_links, 0)
       return false
     GdocPivotalBackground.popup.$('#gdocContent').on 'click', 'a.create_doc', (event) ->
-      if GdocPivotalBackground.in_progress is false
+      if GdocPivotalBackground.in_progress is false && GdocPivotalBackground.pivotal_links.length > 0
         GdocPivotalBackground.update_gdoc_ui({gdoc_loading: true})
         GdocPivotalBackground.update_doc_iteration(GdocPivotalBackground.pivotal_links, 0, true)
       return false
