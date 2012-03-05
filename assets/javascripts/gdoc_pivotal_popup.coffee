@@ -4,6 +4,7 @@ root.GdocPivotalPopup =
   bg_page: chrome.extension.getBackgroundPage()
   # init
   init: ->
+    GdocPivotalPopup.bg_page.GdocPivotalBackground.popup = root
     GdocPivotalPopup.oauth_check()
   # check oauth
   oauth_check: ->
@@ -20,9 +21,8 @@ root.GdocPivotalPopup =
 	    regex_pattern = /^(http|https):\/\/([\w\.\/]+)\/document\/d\/([\w\.\-\_]+)\/(.*)/i
 	    if regex_pattern.test(url)
 	      found_str = url.match(regex_pattern)
-	      if found_str[3]
-	        GdocPivotalPopup.bg_page.GdocPivotalBackground.doc_key = found_str[3]
-	        
+	      if found_str[3]?
+	        GdocPivotalPopup.bg_page.GdocPivotalBackground.analyze_doc(found_str[3])
     
 $ ->
   GdocPivotalPopup.init()

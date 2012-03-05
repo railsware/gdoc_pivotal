@@ -1,6 +1,7 @@
 root = global ? window
 
 root.GdocPivotalBackground =
+  popup: null
   # doc list
   DOCLIST_SCOPE: 'https://docs.google.com/feeds'
   DOCLIST_FEED: 'https://docs.google.com/feeds/default/private/full/'
@@ -8,6 +9,8 @@ root.GdocPivotalBackground =
   # options
   pivotal_regex: /https:\/\/www.pivotaltracker.com\/story\/show\/([\d]+)/i
   # gdoc uploads
+  gdoc: null
+  doc_key: null
   RESUMABLE_CHUNK: 262144 # 256 Kb
   resumable_url: null
   resumable_length: 0
@@ -21,7 +24,15 @@ root.GdocPivotalBackground =
       consumer_secret: 'JU87RE7mHOi18mbhM3tUJCud',
       scope: GdocPivotalBackground.DOCLIST_SCOPE,
       app_name: 'GDoc Pivotal'
-      
+  # analyze doc
+  analyze_doc: (doc_key) ->
+    GdocPivotalBackground.doc_key = doc_key
+    $.ajax
+      type: 'GET'
+      url: "https://docs.google.com/feeds/download/documents/export/Export?id=#{GdocPivotalBackground.doc_key}"
+      success: (data, textStatus, jqXHR) ->
+        GdocPivotalBackground.gdoc = data
+        console.debug data
   # GDOCS fuctions
   # create gdoc
   create_resumable_gdocument: ->
