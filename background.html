@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<!--
+ * Copyright (c) 2010 The Chromium Authors. All rights reserved.  Use of this
+ * source code is governed by a BSD-style license that can be found in the
+ * LICENSE file.
+ *
+ * Author: Eric Bidelman <ericbidelman@chromium.org>
+-->
+<html>
+  <head>
+    <script type="text/javascript" src="javascripts/vendors/chrome_ex_oauthsimple.js"></script>
+    <script type="text/javascript" src="javascripts/vendors/chrome_ex_oauth.js"></script>
+    <script type="text/javascript" src="javascripts/vendors/jquery-1.7.1.min.js"></script>
+    <script type="text/javascript">
+      var DOCLIST_SCOPE = 'https://docs.google.com/feeds';
+      var DOCLIST_FEED = DOCLIST_SCOPE + '/default/private/full/';
+
+      var oauth = ChromeExOAuth.initBackgroundPage({
+        'request_url': 'https://www.google.com/accounts/OAuthGetRequestToken',
+        'authorize_url': 'https://www.google.com/accounts/OAuthAuthorizeToken',
+        'access_url': 'https://www.google.com/accounts/OAuthGetAccessToken',
+        'consumer_key': '125112163426-r1iv64gdhf9t4g23u8kh802io978ftnr.apps.googleusercontent.com',
+        'consumer_secret': 'JU87RE7mHOi18mbhM3tUJCud',
+        'scope': DOCLIST_SCOPE,
+        'app_name': 'GDoc Pivotal'
+      });
+
+      function logout() {
+        chrome.browserAction.setBadgeText({'text': ''});
+        oauth.clearTokens();
+      };
+    </script>
+    <script type="text/javascript" src="javascripts/gdoc_pivotal_background.js"></script>
+  </head>
+  <body>
+  </body>
+</html>
