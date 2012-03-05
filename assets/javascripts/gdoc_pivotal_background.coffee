@@ -2,12 +2,17 @@ root = global ? window
 
 root.GdocPivotalBackground =
   popup: null
+  templates: {}
+  cached_params: null
+  in_progress: false
+  pivotal_links: []
   # doc list
   DOCLIST_SCOPE: 'https://docs.google.com/feeds'
   DOCLIST_FEED: 'https://docs.google.com/feeds/default/private/full/'
   oauth: null
   # options
-  pivotal_regex: /https:\/\/www.pivotaltracker.com\/story\/show\/([\d]+)/i
+  pivotal_regex: /https?:\/\/www.pivotaltracker.com\/story\/show\/([\d]+)/i
+  pivotal_regex_g: /https?:\/\/www.pivotaltracker.com\/story\/show\/([\d]+)/gi
   # gdoc uploads
   gdoc: null
   doc_key: null
@@ -24,15 +29,83 @@ root.GdocPivotalBackground =
       consumer_secret: 'JU87RE7mHOi18mbhM3tUJCud',
       scope: GdocPivotalBackground.DOCLIST_SCOPE,
       app_name: 'GDoc Pivotal'
+  # init popup
+  init_popup: ->
+    if GdocPivotalBackground.popup?
+      GdocPivotalBackground.init_templates()
+      GdocPivotalBackground.init_bindings()
+      if GdocPivotalBackground.in_progress is true && GdocPivotalBackground.cached_params?
+        GdocPivotalBackground.update_gdoc_ui(GdocPivotalBackground.cached_params)
+  init_templates: ->
+    if GdocPivotalBackground.popup?
+      GdocPivotalBackground.templates.gdoc_info = Handlebars.compile(GdocPivotalBackground.popup.$('#gdocInformation').html())
+  init_bindings: ->
+    GdocPivotalBackground.popup.$('#gdocContent').on 'click', 'a.update_doc', (event) ->
+      if GdocPivotalBackground.in_progress is false
+        GdocPivotalBackground.update_gdoc_ui({gdoc_loading: true})
+        GdocPivotalBackground.update_doc_iteration(GdocPivotalBackground.pivotal_links, 0)
+      return false
+    GdocPivotalBackground.popup.$('#gdocContent').on 'click', 'a.create_doc', (event) ->
+      if GdocPivotalBackground.in_progress is false
+        GdocPivotalBackground.update_gdoc_ui({gdoc_loading: true})
+        GdocPivotalBackground.update_doc_iteration(GdocPivotalBackground.pivotal_links, 0, true)
+      return false
   # analyze doc
   analyze_doc: (doc_key) ->
-    GdocPivotalBackground.doc_key = doc_key
-    $.ajax
-      type: 'GET'
-      url: "https://docs.google.com/feeds/download/documents/export/Export?id=#{GdocPivotalBackground.doc_key}"
-      success: (data, textStatus, jqXHR) ->
-        GdocPivotalBackground.gdoc = data
-        console.debug data
+    if GdocPivotalBackground.popup? && GdocPivotalBackground.in_progress is false
+      GdocPivotalBackground.doc_key = doc_key
+      $.ajax
+        type: 'GET'
+        url: "https://docs.google.com/feeds/download/documents/export/Export?id=#{GdocPivotalBackground.doc_key}"
+        beforeSend: (jqXHR, settings) ->
+          GdocPivotalBackground.popup.$('#gdocContent').empty().html("Loading...")
+        success: (data, textStatus, jqXHR) ->
+          GdocPivotalBackground.gdoc = data
+          pivotal_links = GdocPivotalBackground.gdoc.match(GdocPivotalBackground.pivotal_regex_g) || []
+          GdocPivotalBackground.pivotal_links = $.unique(pivotal_links) if pivotal_links.length > 0
+          params = 
+            info_show: true
+            links_count: GdocPivotalBackground.pivotal_links.length
+          params.valid_gdoc = true if GdocPivotalBackground.pivotal_links.length > 0
+          GdocPivotalBackground.popup.$('#gdocContent').empty().html(GdocPivotalBackground.templates.gdoc_info(params))
+  update_gdoc_ui: (params = {}) ->
+    if params.gdoc_loading?
+      GdocPivotalBackground.in_progress = params.gdoc_loading
+      GdocPivotalBackground.cached_params = null if params.gdoc_loading is false
+    else
+      GdocPivotalBackground.cached_params = params
+    GdocPivotalBackground.popup.$('#gdocContent').empty().html(GdocPivotalBackground.templates.gdoc_info(params))
+  update_doc_iteration: (pivotal_links, iterator = 0, create_new_doc = false) ->
+    if pivotal_links[iterator]?
+      temp_match = pivotal_links[iterator]
+      pivotal_ids = temp_match.match(GdocPivotalBackground.pivotal_regex)
+      $.ajax
+        timeout: 60000
+        dataType: 'xml'
+        crossDomain: true
+        url: 'https://www.pivotaltracker.com/services/v4/stories/' + pivotal_ids[1]
+        headers:
+          "X-TrackerToken": "11" # TODO: localStorage
+        complete: ->
+          GdocPivotalBackground.update_gdoc_ui({pivotal_link: iterator, pivotal_links_count: pivotal_links.length, pivotal_links_percent: Math.round(100 * iterator / pivotal_links.length)})
+        success: (xml) ->
+          r = new RegExp("https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/" + pivotal_ids[1] + "([\\s]?)(\\([\\w\\-\\:\\s]+\\))?", "gi")
+          link_info = $(xml).find('current_state').text()
+          if $(xml).find('deadline').length > 0
+            link_info = $(xml).find('deadline').text()
+          GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r, 'https://www.pivotaltracker.com/story/show/' + pivotal_ids[1] + ' (' + link_info + ')')
+          r_restore = new RegExp("(href=\")https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/" + pivotal_ids[1] + "([\\s]?)(\\([\\w\\-\\:\\s]+\\))?", "gi")
+          GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r_restore, 'href="https://www.pivotaltracker.com/story/show/' + pivotal_ids[1])
+          iterator++
+          GdocPivotalBackground.update_doc_iteration(pivotal_links, iterator, create_new_doc)
+        error: ->
+          iterator++
+          GdocPivotalBackground.update_doc_iteration(pivotal_links, iterator, create_new_doc)
+    else
+      if create_new_doc is true
+        GdocPivotalBackground.create_resumable_gdocument()
+      else
+        GdocPivotalBackground.update_resumable_gdocument()
   # GDOCS fuctions
   # create gdoc
   create_resumable_gdocument: ->
@@ -60,26 +133,25 @@ root.GdocPivotalBackground =
 			  'X-Upload-Content-Length': GdocPivotalBackground.gdoc.length
 		  parameters: 
 		    alt: 'json'
-    url =  "#{DOCLIST_SCOPE}/upload/create-session/default/private/full/#{GdocPivotalBackground.doc_key}"
+    url =  "#{GdocPivotalBackground.DOCLIST_SCOPE}/upload/create-session/default/private/full/#{GdocPivotalBackground.doc_key}"
     GdocPivotalBackground.oauth.sendSignedRequest(url, GdocPivotalBackground.handle_resumable_gdocument, params)
   handle_resumable_gdocument: (response, xhr) ->
     if 4 == xhr.readyState && 200 == xhr.status
       if xhr.getResponseHeader('location')
+        GdocPivotalBackground.resumable_length = 0
         GdocPivotalBackground.resumable_url = xhr.getResponseHeader('location')
-        #MonkeyPivotalBackground.update_message_on_popup("Creating doc: 0/" + MonkeyPivotalBackground.gdoc.length);
+        GdocPivotalBackground.update_gdoc_ui({bit_saved: 0, bit_count: GdocPivotalBackground.gdoc.length})
         GdocPivotalBackground.upload_resumable_document()
       else
-        #MonkeyPivotalBackground.show_error_message_on_popup('Error creating document. Sorry :(');
-        GdocPivotalBackground.clear_variables()
+        GdocPivotalBackground.handle_upload_error()
     else
-      GdocPivotalBackground.show_error_message_on_popup('Error creating document. Sorry :(')
-      GdocPivotalBackground.clear_variables()
+      GdocPivotalBackground.handle_upload_error()
   upload_resumable_document: ->
-    init_data_length = GdocPivotalBackground.resumable_length;
+    init_data_length = GdocPivotalBackground.resumable_length
     last_data_length = GdocPivotalBackground.resumable_length + GdocPivotalBackground.RESUMABLE_CHUNK
     last_data_length = GdocPivotalBackground.gdoc.length if last_data_length > GdocPivotalBackground.gdoc.length
     GdocPivotalBackground.resumable_length = last_data_length
-    #MonkeyPivotalBackground.update_message_on_popup("Uploading doc: " + last_data_length + "/" + MonkeyPivotalBackground.gdoc.length);
+    GdocPivotalBackground.update_gdoc_ui({bit_saved: last_data_length, bit_count: GdocPivotalBackground.gdoc.length, bit_percent: Math.round(100 * last_data_length / GdocPivotalBackground.gdoc.length)})
     $.ajax
       type: 'PUT'
       url: GdocPivotalBackground.resumable_url
@@ -102,13 +174,17 @@ root.GdocPivotalBackground =
     else if (200 == xhr.status || 201 == xhr.status || 400 == xhr.status)
       GdocPivotalBackground.handle_upload_success(response, xhr)
     else
-      #MonkeyPivotalBackground.show_error_message_on_popup('Error creating document. Sorry :(');
-      GdocPivotalBackground.clear_variables()
+      GdocPivotalBackground.handle_upload_error()
   handle_upload_success: (response, xhr) ->
-    data = JSON.parse(response)
-  clear_variables: ->
+    GdocPivotalBackground.clear_variables_and_ui({success_updated: true})
+  handle_upload_error: (message = 'Error creating document. Sorry :(') ->
+    GdocPivotalBackground.clear_variables_and_ui({success_updated: false, error_message: message})
+  clear_variables_and_ui: (params = {}) ->
+    params.gdoc_loading = false
+    GdocPivotalBackground.update_gdoc_ui(params)
     GdocPivotalBackground.doc_key = null
     GdocPivotalBackground.gdoc = null
+    GdocPivotalBackground.pivotal_links = []
   # set icon text
   set_icon_text: (text) ->
     chrome.browserAction.setBadgeText

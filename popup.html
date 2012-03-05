@@ -2,10 +2,68 @@
 <html>
 <head>
   <title>GDoc Pivotal</title>
+  <!-- Le styles -->
+  <link href="stylesheets/vendors/bootstrap/css/bootstrap.css" rel="stylesheet">
+  <link href="stylesheets/vendors/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+  
   <script type="text/javascript" src="javascripts/vendors/jquery-1.7.1.min.js"></script>
+  <script type="text/javascript" src="javascripts/vendors/handlebars-1.0.0.beta.6.js"></script>
+  <script type="text/javascript" src="javascripts/utils.js"></script>
   <script type="text/javascript" src="javascripts/gdoc_pivotal_popup.js"></script>
+  
+  <style>
+    .hide_on_starting {
+      display: none;
+    }
+  </style>
 </head>
-<body>
+<body style="width:500px; height: 200px;">
+  <div class="container">
+    <!-- Example row of columns -->
+    <div class="row">
+      <div class="span4">
+        <h2>Pivotal Doc Links</h2>
+        <div id="gdocContent">Not opened google document.</div>
+      </div>
+    </div>
+
+    <hr>
+
+    <footer>
+      <p>&copy; RW 2012</p>
+    </footer>
+
+  </div> <!-- /container -->
+  
+  <script id="gdocInformation" type="text/x-handlebars-template">
+    {{#if info_show}}
+      {{#if valid_gdoc}}
+        <p class="update_doc_text">Find {{links_count}} pivotal links. What to do with this document?</p>
+        <p><a class="update_doc btn" href="#">Update current doc &raquo;</a> <a class="create_doc btn" href="#">Create doc based on this &raquo;</a></p>
+      {{else}}
+        <p>This doc doesn't have any pivotal links.</p>
+      {{/if}}
+    {{/if}}
+    {{#if pivotal_links_count}}
+      <div class="progress progress-info progress-striped active">
+        <div class="bar" style="width: {{pivotal_links_percent}}%;">
+          Updating {{pivotal_link}} / {{pivotal_links_count}}
+        </div>
+      </div>
+    {{/if}}
+    {{#if bit_count}}
+      <div class="progress progress-info progress-striped active">
+        <div class="bar" style="width: {{bit_percent}}%;">
+          Updating doc {{bit_saved}} / {{bit_count}}
+        </div>
+      </div>
+    {{/if}}
+    {{#if success_updated}}
+      <p>Update completed!</p>
+    {{else}}
+      <p>{{error_message}}</p>
+    {{/if}}
+  </script>
 </body>
 </html>
 

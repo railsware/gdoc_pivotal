@@ -5,6 +5,7 @@ root.GdocPivotalPopup =
   # init
   init: ->
     GdocPivotalPopup.bg_page.GdocPivotalBackground.popup = root
+    GdocPivotalPopup.bg_page.GdocPivotalBackground.init_popup()
     GdocPivotalPopup.oauth_check()
   # check oauth
   oauth_check: ->
