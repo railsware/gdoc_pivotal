@@ -71,7 +71,11 @@ root.GdocPivotalBackground =
   update_gdoc_ui: (params = {}) ->
     if params.gdoc_loading?
       GdocPivotalBackground.in_progress = params.gdoc_loading
-      GdocPivotalBackground.cached_params = null if params.gdoc_loading is false
+      if params.gdoc_loading is true
+        GdocPivotalBackground.set_icon_text('...')
+      else
+        GdocPivotalBackground.set_icon_text('')
+        GdocPivotalBackground.cached_params = null
     else
       GdocPivotalBackground.cached_params = params
     GdocPivotalBackground.popup.$('#gdocContent').empty().html(GdocPivotalBackground.templates.gdoc_info(params))
@@ -85,7 +89,7 @@ root.GdocPivotalBackground =
         crossDomain: true
         url: 'https://www.pivotaltracker.com/services/v4/stories/' + pivotal_ids[1]
         headers:
-          "X-TrackerToken": "11" # TODO: localStorage
+          "X-TrackerToken": localStorage.pivotal_token
         complete: ->
           GdocPivotalBackground.update_gdoc_ui({pivotal_link: iterator, pivotal_links_count: pivotal_links.length, pivotal_links_percent: Math.round(100 * iterator / pivotal_links.length)})
         success: (xml) ->
@@ -130,9 +134,9 @@ root.GdocPivotalBackground =
 	      'If-Match': '*'
 	      'Slug': 'GDoc Pivotal Patch'
 	      'X-Upload-Content-Type': 'text/html'
-			  'X-Upload-Content-Length': GdocPivotalBackground.gdoc.length
-		  parameters: 
-		    alt: 'json'
+	      'X-Upload-Content-Length': GdocPivotalBackground.gdoc.length
+      parameters: 
+        alt: 'json'
     url =  "#{GdocPivotalBackground.DOCLIST_SCOPE}/upload/create-session/default/private/full/#{GdocPivotalBackground.doc_key}"
     GdocPivotalBackground.oauth.sendSignedRequest(url, GdocPivotalBackground.handle_resumable_gdocument, params)
   handle_resumable_gdocument: (response, xhr) ->
@@ -176,6 +180,15 @@ root.GdocPivotalBackground =
     else
       GdocPivotalBackground.handle_upload_error()
   handle_upload_success: (response, xhr) ->
+    data = null
+    try
+      data = jQuery.parseJSON(response)
+    catch e
+      data = null
+    if data? && localStorage.is_show_notifications? && 1 == parseInt(localStorage.is_show_notifications)
+      if data.entry? && data.entry.title? && data.entry.link?
+        msg = "All done. Name: #{data.entry.title.$t}, Link: #{GdocPivotalBackground.get_gdoc_link(data.entry.link, 'alternate').href}"
+        GdocPivotalBackground.show_notification('Work done!', msg)
     GdocPivotalBackground.clear_variables_and_ui({success_updated: true})
   handle_upload_error: (message = 'Error creating document. Sorry :(') ->
     GdocPivotalBackground.clear_variables_and_ui({success_updated: false, error_message: message})
@@ -193,6 +206,13 @@ root.GdocPivotalBackground =
   logout: ->
     GdocPivotalBackground.set_icon_text('')
     GdocPivotalBackground.oauth.clearTokens()
+  show_notification: (title, msg) ->
+    notification = webkitNotifications.createNotification 'images/icon48.png', title, msg
+    notification.show()
+  get_gdoc_link: (links, rel) ->
+    for link in links
+      return link if link.rel == rel
+    return ""
     
 $ ->
   GdocPivotalBackground.init()
