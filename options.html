@@ -2,12 +2,32 @@
 <html>
   <head>
     <title>Options</title>
+    <!-- Le styles -->
+    <link href="stylesheets/vendors/bootstrap/css/bootstrap.css" rel="stylesheet">
+    <link href="stylesheets/vendors/bootstrap/css/bootstrap-responsive.css" rel="stylesheet">
+    
     <script type="text/javascript" src="javascripts/vendors/jquery-1.7.1.min.js"></script>
     <script type="text/javascript" src="javascripts/gdoc_pivotal_options.js"></script>
   </head>
   <body>
-    <p><button id="revokeOauth" type="button">Revoke your OAuth token</button></p>
-    <p><label for="showNotification">Show notification?:</label> <input id="showNotification" type="checkbox" value="1" /></p>
-    <p><label for="pivotalToken">Pivotal Tracker Token:</label><input type="text" id="pivotalToken" /></p>
+    
+    <div class="container">
+      <div class="row">
+        <div class="span4">
+          <h2>Revoke your OAuth token from Google Account</h2>
+          <p><button id="revokeOauth" type="button" class="btn">Revoke your OAuth token</button></p>
+        </div>
+        <div class="span4">
+          <h2>Show notifications?</h2>
+          <p><label for="showNotification">Show notification?:</label> <input id="showNotification" type="checkbox" value="1" /></p>
+       </div>
+        <div class="span4">
+          <h2>Pivotal Token</h2>
+          <p><label for="pivotalToken">Pivotal Tracker Token:</label><input type="text" id="pivotalToken" /></p>
+        </div>
+      </div>
+    </div>
+    
+    
   </body>
 </html>

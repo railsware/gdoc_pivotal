@@ -10,7 +10,6 @@ root.GdocPivotalBackground =
   DOCLIST_SCOPE: 'https://docs.google.com/feeds'
   SPRLIST_SCOPE: 'https://spreadsheets.google.com/feeds'
   oauth: null
-  spreadsheets_oauth: null
   # options
   pivotal_regex: /https?:\/\/www.pivotaltracker.com\/story\/show\/([\d]+)/i
   pivotal_regex_g: /https?:\/\/www.pivotaltracker.com\/story\/show\/([\d]+)/gi
@@ -29,14 +28,6 @@ root.GdocPivotalBackground =
       consumer_key: '125112163426-r1iv64gdhf9t4g23u8kh802io978ftnr.apps.googleusercontent.com',
       consumer_secret: 'JU87RE7mHOi18mbhM3tUJCud',
       scope: GdocPivotalBackground.DOCLIST_SCOPE,
-      app_name: 'GDoc Pivotal'
-    GdocPivotalBackground.spreadsheets_oauth = ChromeExOAuth.initBackgroundPage
-      request_url: 'https://www.google.com/accounts/OAuthGetRequestToken'
-      authorize_url: 'https://www.google.com/accounts/OAuthAuthorizeToken'
-      access_url: 'https://www.google.com/accounts/OAuthGetAccessToken'
-      consumer_key: '125112163426-r1iv64gdhf9t4g23u8kh802io978ftnr.apps.googleusercontent.com',
-      consumer_secret: 'JU87RE7mHOi18mbhM3tUJCud',
-      scope: GdocPivotalBackground.SPRLIST_SCOPE,
       app_name: 'GDoc Pivotal'
   # init popup
   init_popup: ->
