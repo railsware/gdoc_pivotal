@@ -98,12 +98,12 @@ root.GdocPivotalBackground =
           story = story.story if story.story?
           story.owned_by = story.owned_by.person if story.owned_by? && story.owned_by.person?
           story.requested_by = story.requested_by.person if story.requested_by? && story.requested_by.person?
-          r = new RegExp("https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/#{pivotal_ids[1]}([\\s]?)(\\([\\d\\w\\-,.\\'\\\"\\s]+\\))?", "gi")
+          r = new RegExp("https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/#{pivotal_ids[1]}([\\s]?)(\\([^<>()]+\\))?", "gi")
           link_info = GdocPivotalBackground.templates.pivotal_link(story)
           console.debug link_info
           GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r, "https://www.pivotaltracker.com/story/show/#{pivotal_ids[1]} (#{link_info})")
           console.debug GdocPivotalBackground.gdoc
-          r_restore = new RegExp("(href=\")https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/#{pivotal_ids[1]}([\\s]?)(\\([\\d\\w\\-,.\\'\\\"\\s]+\\))?\"", "gi")
+          r_restore = new RegExp("(href=\")https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/#{pivotal_ids[1]}([\\s]?)(\\([^<>()]+\\))?\"", "gi")
           GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r_restore, "href=\"https://www.pivotaltracker.com/story/show/#{pivotal_ids[1]}\"")
           console.debug GdocPivotalBackground.gdoc
           iterator++
