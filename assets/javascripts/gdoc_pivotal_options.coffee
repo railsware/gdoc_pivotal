@@ -27,6 +27,13 @@ root.GdocPivotalOptions =
       $('#showNotification').attr("checked", "checked") 
     else 
       $('#showNotification').removeAttr('checked')
+      
+    # format
+    $('#pivotalLinkFormat').change (event) ->
+      localStorage.pivotal_format = $(event.target).val().split("(").join("").split(")").join("")
+      $('#pivotalLinkFormat').val(localStorage.pivotal_format)
+    localStorage.pivotal_format = "{{current_state}}" unless localStorage.pivotal_format?
+    $('#pivotalLinkFormat').val(localStorage.pivotal_format)
   
 $ ->
   GdocPivotalOptions.init()

@@ -18,14 +18,22 @@
           <p><button id="revokeOauth" type="button" class="btn">Revoke your OAuth token</button></p>
         </div>
         <div class="span4">
-          <h2>Show notifications?</h2>
-          <p><label for="showNotification">Show notification?:</label> <input id="showNotification" type="checkbox" value="1" /></p>
+          <h2>General settings</h2>
+          <p>
+            <label for="showNotification" class="checkbox"><input id="showNotification" type="checkbox" value="1" /> Show notification?</label>
+          </p>
+          <p>
+            <label for="pivotalLinkFormat">Pivotal Link Format:<input type="text" id="pivotalLinkFormat" /></label>
+            <p class="help-block">Possible keys: {{current_state}}, {{deadline}}, {{description}}, {{estimate}}, {{labels}}, {{url}}, {{name}}, {{story_type}}, {{#if owned_by}}{{name}}{{/if}}, {{#if owned_by}}{{initials}}{{/if}}, {{#if requested_by}}{{email}}{{/if}}</p>
+          </p>
        </div>
         <div class="span4">
           <h2>Pivotal Token</h2>
-          <p><label for="pivotalToken">Pivotal Tracker Token:</label><input type="text" id="pivotalToken" /></p>
+          <p><label for="pivotalToken">Pivotal Tracker Token:<input type="text" id="pivotalToken" /></label></p>
         </div>
       </div>
+      
+      
     </div>
     
     

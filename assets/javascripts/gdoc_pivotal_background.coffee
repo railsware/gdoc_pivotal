@@ -39,6 +39,7 @@ root.GdocPivotalBackground =
   init_templates: ->
     if GdocPivotalBackground.popup?
       GdocPivotalBackground.templates.gdoc_info = Handlebars.compile(GdocPivotalBackground.popup.$('#gdocInformation').html())
+      GdocPivotalBackground.templates.pivotal_link = Handlebars.compile(localStorage.pivotal_format)
   init_bindings: ->
     GdocPivotalBackground.popup.$('#gdocContent').on 'click', 'a.update_doc', (event) ->
       if GdocPivotalBackground.in_progress is false && GdocPivotalBackground.pivotal_links.length > 0
@@ -93,13 +94,18 @@ root.GdocPivotalBackground =
         complete: ->
           GdocPivotalBackground.update_gdoc_ui({pivotal_link: iterator, pivotal_links_count: pivotal_links.length, pivotal_links_percent: Math.round(100 * iterator / pivotal_links.length)})
         success: (xml) ->
-          r = new RegExp("https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/" + pivotal_ids[1] + "([\\s]?)(\\([\\w\\-\\:\\s]+\\))?", "gi")
-          link_info = $(xml).find('current_state').text()
-          if $(xml).find('deadline').length > 0
-            link_info = $(xml).find('deadline').text()
-          GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r, 'https://www.pivotaltracker.com/story/show/' + pivotal_ids[1] + ' (' + link_info + ')')
-          r_restore = new RegExp("(href=\")https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/" + pivotal_ids[1] + "([\\s]?)(\\([\\w\\-\\:\\s]+\\))?", "gi")
-          GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r_restore, 'href="https://www.pivotaltracker.com/story/show/' + pivotal_ids[1])
+          story = XML2JSON.parse(xml, true)
+          story = story.story if story.story?
+          story.owned_by = story.owned_by.person if story.owned_by? && story.owned_by.person?
+          story.requested_by = story.requested_by.person if story.requested_by? && story.requested_by.person?
+          r = new RegExp("https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/#{pivotal_ids[1]}([\\s]?)(\\(.*\\))?", "gi")
+          link_info = GdocPivotalBackground.templates.pivotal_link(story)
+          console.debug link_info
+          GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r, "https://www.pivotaltracker.com/story/show/#{pivotal_ids[1]} (#{link_info})")
+          console.debug GdocPivotalBackground.gdoc
+          r_restore = new RegExp("(href=\")https?:\\/\\/www.pivotaltracker.com\\/story\\/show\\/#{pivotal_ids[1]}([\\s]?)(\\(.*\\))?\"", "gi")
+          GdocPivotalBackground.gdoc = GdocPivotalBackground.gdoc.replace(r_restore, "href=\"https://www.pivotaltracker.com/story/show/#{pivotal_ids[1]}\"")
+          console.debug GdocPivotalBackground.gdoc
           iterator++
           GdocPivotalBackground.update_doc_iteration(pivotal_links, iterator, create_new_doc)
         error: ->
